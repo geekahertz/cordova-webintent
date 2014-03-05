@@ -32,13 +32,54 @@ public class WebIntent extends CordovaPlugin {
     //private String onNewIntentCallback = null;
     private CallbackContext callbackContext = null;
 
+	@Override
+	public void onActivityResult(int requestCode, int resultCode, Intent intent) {
+		if (requestCode == 0) {
+			if (resultCode == RESULT_OK) {
+				String contents = intent.getStringExtra("SCAN_RESULT");
+				String format = intent.getStringExtra("SCAN_RESULT_FORMAT");
+				callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, contents, format));
+			} else if (resultCode == RESULT_CANCELED) {
+				callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.ERROR));
+			}
+		}
+    }
+
     //public boolean execute(String action, JSONArray args, String callbackId) {
     @Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) {
         try {
             this.callbackContext = callbackContext;
 
-            if (action.equals("startActivity")) {
+            if (action.equals("startActivityForResult")) {
+                if (args.length() != 1) {
+                    //return new PluginResult(PluginResult.Status.INVALID_ACTION);
+                    callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.INVALID_ACTION));
+                    return false;
+                }
+
+                // Parse the arguments
+                JSONObject obj = args.getJSONObject(0);
+                String type = obj.has("type") ? obj.getString("type") : null;
+                Uri uri = obj.has("url") ? Uri.parse(obj.getString("url")) : null;
+                JSONObject extras = obj.has("extras") ? obj.getJSONObject("extras") : null;
+                Map<String, String> extrasMap = new HashMap<String, String>();
+
+                // Populate the extras if any exist
+                if (extras != null) {
+                    JSONArray extraNames = extras.names();
+                    for (int i = 0; i < extraNames.length(); i++) {
+                        String key = extraNames.getString(i);
+                        String value = extras.getString(key);
+                        extrasMap.put(key, value);
+                    }
+                }
+
+                ((CordovaActivity)this.cordova.getActivity()).startActivityForResult(new Intent(obj.getString("action")), 0);
+                //return new PluginResult(PluginResult.Status.OK);                
+                return true;
+
+            } else if (action.equals("startActivity")) {
                 if (args.length() != 1) {
                     //return new PluginResult(PluginResult.Status.INVALID_ACTION);
                     callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.INVALID_ACTION));

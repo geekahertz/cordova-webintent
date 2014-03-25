@@ -31,15 +31,25 @@ public class WebIntent extends CordovaPlugin {
 
     //private String onNewIntentCallback = null;
     private CallbackContext callbackContext = null;
+	private Map<String, String> callbackExtras = null;
 
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent intent) {
 		if (requestCode == 0) {
-			if (resultCode == RESULT_OK) {
-				String contents = intent.getStringExtra("SCAN_RESULT");
-				String format = intent.getStringExtra("SCAN_RESULT_FORMAT");
-				callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, contents, format));
-			} else if (resultCode == RESULT_CANCELED) {
+			if (resultCode == -1) {
+				String r = "";
+				JSONObject extras = new JSONObject();
+			    for (String key : callbackExtras.keySet()) {
+					String value = callbackExtras.get(key);
+					if(intent.hasExtra(key)){
+						r += intent.getStringExtra(key)+" ";
+						//extras.put(key, intent.getStringExtra(key));
+					}
+				}
+				//String contents = intent.getStringExtra("SCAN_RESULT");
+				//String format = intent.getStringExtra("SCAN_RESULT_FORMAT");
+				callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, r));
+			} else {
 				callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.ERROR));
 			}
 		}
@@ -53,7 +63,6 @@ public class WebIntent extends CordovaPlugin {
 
             if (action.equals("startActivityForResult")) {
                 if (args.length() != 1) {
-                    //return new PluginResult(PluginResult.Status.INVALID_ACTION);
                     callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.INVALID_ACTION));
                     return false;
                 }
@@ -74,7 +83,9 @@ public class WebIntent extends CordovaPlugin {
                         extrasMap.put(key, value);
                     }
                 }
+				callbackExtras = extrasMap;
 
+				((CordovaActivity)this.cordova.getActivity()).setActivityResultCallback(this);
                 ((CordovaActivity)this.cordova.getActivity()).startActivityForResult(new Intent(obj.getString("action")), 0);
                 //return new PluginResult(PluginResult.Status.OK);                
                 return true;

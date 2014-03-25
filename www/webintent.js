@@ -16,13 +16,13 @@
     WebIntent.prototype.EXTRA_EMAIL = "android.intent.extra.EMAIL";
     WebIntent.prototype.ACTION_CALL = "android.intent.action.CALL";
 
-   	WebIntent.prototype.startActivity = function(params, success, fail){
-   		   return cordova.exec(function(args) {
-               success(args);
-           }, function(args) {
-               fail(args);
-           }, 'WebIntent', 'startActivityForResult', [params]);
-   	}
+    WebIntent.prototype.startActivityForResult = function (params, success, fail) {
+        return cordova.exec(function (args) {
+            success(args);
+        }, function (args) {
+            fail(args);
+        }, 'WebIntent', 'startActivityForResult', [params]);
+    };
 
     WebIntent.prototype.startActivity = function(params, success, fail) {
         return cordova.exec(function(args) {

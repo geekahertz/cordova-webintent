@@ -14,6 +14,7 @@ import android.text.Html;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
+import org.apache.cordova.CordovaResourceApi;
 import org.apache.cordova.PluginResult;
 
 /**
@@ -98,9 +99,10 @@ public class WebIntent extends CordovaPlugin {
                 }
 
                 // Parse the arguments
+				final CordovaResourceApi resourceApi = webView.getResourceApi();
                 JSONObject obj = args.getJSONObject(0);
                 String type = obj.has("type") ? obj.getString("type") : null;
-                Uri uri = obj.has("url") ? Uri.parse(obj.getString("url")) : null;
+                Uri uri = obj.has("url") ? resourceApi.remapUri(Uri.parse(obj.getString("url"))) : null;
                 JSONObject extras = obj.has("extras") ? obj.getJSONObject("extras") : null;
                 Map<String, String> extrasMap = new HashMap<String, String>();
 
@@ -240,7 +242,8 @@ public class WebIntent extends CordovaPlugin {
             } else if (key.equals(Intent.EXTRA_STREAM)) {
                 // allowes sharing of images as attachments.
                 // value in this case should be a URI of a file
-                i.putExtra(key, Uri.parse(value));
+				final CordovaResourceApi resourceApi = webView.getResourceApi();
+                i.putExtra(key, resourceApi.remapUri(Uri.parse(value)));
             } else if (key.equals(Intent.EXTRA_EMAIL)) {
                 // allows to add the email address of the receiver
                 i.putExtra(Intent.EXTRA_EMAIL, new String[] { value });

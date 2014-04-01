@@ -1,12 +1,12 @@
 # WebIntent Android Plugin for Cordova 3.X #
 By Boris Smus
 
-Phonegap/Cordova 2.X version available at the [WebIntent](https://github.com/phonegap/phonegap-plugins/tree/master/Android/WebIntent) plugin site.
+Please see the original plugin at the [WebIntent](https://github.com/Initsogar/cordova-webintent) plugin site.
 
 ## Adding the Plugin to your project ##
 1. To install the plugin, use the Cordova CLI and enter the following:
 
-`cordova plugin add https://github.com/Initsogar/cordova-webintent.git`
+`cordova plugin add https://github.com/geekahertz/cordova-webintent.git`
 
 2. Confirm that the following is in your `res/xml/config.xml` file:
 
@@ -14,87 +14,52 @@ Phonegap/Cordova 2.X version available at the [WebIntent](https://github.com/pho
 
 ## Sample code
 
-Here is an example of using webintent to open an Android .apk package, which then launches the Installer:
+Here is an example of using webintent to select a file chooser, pick a file, which then return the uri in an JSON Object:
 
-    window.plugins.webintent.startActivity({
-          action: window.plugins.webintent.ACTION_VIEW,
-          url: theFile.toURL(),
-          type: 'application/vnd.android.package-archive'
+    window.plugins.webintent.startActivityForResult(
+        {
+            action: "android.intent.action.GET_CONTENT",
+            type : "*/*"        
         },
-        function() {},
+        function() {data},
+            alert(JSON.stringify(data));
         function() {
-          alert('Failed to open URL via Android Intent.');
-          console.log("Failed to open URL via Android Intent. URL: " + theFile.fullPath)
+            alert('Failed to retrieve uri via Android Intent.');
+        }
+    );
+
+Here is an example of using webintent to scan a barcode (provided you have zxing barcode scanner installed)
+
+    window.plugins.webintent.startActivityForResult(
+        {
+            action: "com.google.zxing.client.android.SCAN"
+        },
+        function() {data},
+            alert(JSON.stringify(data));
+        function() {
+            alert('Failed to retrieve uri via Android Intent.');
         }
     );
 
 
-## Using the plugin ##
+## Additional method for this plugin ##
 The plugin creates the object `window.plugins.webintent` with five methods:
 
-### startActivity ###
-Launches an Android intent. For example:
+### startActivityForResult ###
+Launches an Android intent and return the uri / extras as a JSON object. For example:
 
-
-    window.plugins.webintent.startActivity({
-        action: window.plugins.webintent.ACTION_VIEW,
-        url: 'geo:0,0?q=' + address},
-        function() {},
-        function() {alert('Failed to open URL via Android Intent')};
+    window.plugins.webintent.startActivityForResult(
+        {
+            action: "android.intent.action.GET_CONTENT",
+            type : "*/*"        
+        },
+        function(data) {
+            alert(JSON.stringify(data));
+        },
+        function() {
+            alert('Failed to open URL via Android Intent')
+        };
     );
-
-
-### hasExtra ###
-checks if this app was invoked with the specified extra. For example:
-
-    window.plugins.webintent.hasExtra(WebIntent.EXTRA_TEXT,
-        function(has) {
-            // has is true iff it has the extra
-        }, function() {
-            // Something really bad happened.
-        }
-    );
-
-### getExtra ###
-Gets the extra that this app was invoked with. For example:
-
-    window.plugins.webintent.getExtra(WebIntent.EXTRA_TEXT,
-        function(url) {
-            // url is the value of EXTRA_TEXT
-        }, function() {
-            // There was no extra supplied.
-        }
-    );
-
-### getUri ###
-Gets the Uri the app was invoked with. For example:
-
-    window.plugins.webintent.getUri(function(url) {
-        if(url !== "") {
-            // url is the url the intent was launched with
-        }
-    });
-
-### onNewIntent ###
-Gets called when onNewIntent is called for the parent activity. Used in only certain launchModes. For example:
-
-    window.plugins.webintent.onNewIntent(function(url) {
-        if(url !== "") {
-            // url is the url that was passed to onNewIntent
-        }
-    });
-
-### sendBroadcast ###
-Sends a custom intent passing optional extras
-
-    window.plugins.webintent.sendBroadcast({
-                action: 'com.dummybroadcast.action.triggerthing',
-                extras: {
-                    'option': true
-                }
-            }, function() {
-            }, function() {
-    });
 
 ## Licence ##
 

@@ -1,7 +1,7 @@
 # WebIntent Android Plugin for Cordova 3.X #
 By Boris Smus
 
-Please see the original plugin at the [WebIntent](https://github.com/Initsogar/cordova-webintent) plugin site.
+This folk adds the 'startActivityForResult' method to the original plugin.  Please see the original plugin at the [WebIntent](https://github.com/Initsogar/cordova-webintent) plugin site.
 
 ## Adding the Plugin to your project ##
 1. To install the plugin, use the Cordova CLI and enter the following:
@@ -28,7 +28,7 @@ Here is an example of using webintent to select a file chooser, pick a file, whi
         }
     );
 
-Here is an example of using webintent to scan a barcode (provided you have zxing barcode scanner installed)
+Here is another example of using webintent to scan a barcode and return the barcode info. in an JSON object (provided you have zxing barcode scanner installed)
 
     window.plugins.webintent.startActivityForResult(
         {
@@ -43,7 +43,6 @@ Here is an example of using webintent to scan a barcode (provided you have zxing
 
 
 ## Additional method for this plugin ##
-The plugin creates the object `window.plugins.webintent` with five methods:
 
 ### startActivityForResult ###
 Launches an Android intent and return the uri / extras as a JSON object. For example:

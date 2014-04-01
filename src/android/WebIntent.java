@@ -11,6 +11,9 @@ import org.json.JSONObject;
 import android.content.Intent;
 import android.net.Uri;
 import android.text.Html;
+import android.app.Activity;
+import android.os.Bundle;
+import android.util.Log;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
@@ -32,26 +35,30 @@ public class WebIntent extends CordovaPlugin {
 
     //private String onNewIntentCallback = null;
     private CallbackContext callbackContext = null;
-	private Map<String, String> callbackExtras = null;
+	private static final int REQUEST_CODE = 1;
 
-	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent intent) {
-		if (requestCode == 0) {
-			if (resultCode == -1) {
-				String r = "";
-				JSONObject extras = new JSONObject();
-			    for (String key : callbackExtras.keySet()) {
-					String value = callbackExtras.get(key);
-					if(intent.hasExtra(key)){
-						r += intent.getStringExtra(key)+" ";
-						//extras.put(key, intent.getStringExtra(key));
+		if (requestCode == REQUEST_CODE) {
+			if (resultCode == Activity.RESULT_OK) {
+				try {
+					JSONObject obj = new JSONObject();
+					if (intent.getData() != null){
+						obj.put("uri", intent.getDataString());
 					}
+					Bundle bundle = intent.getExtras();
+				    if (bundle != null) {
+						for (String key : bundle.keySet()) {
+						    Object value = bundle.get(key);
+							obj.put(key, value.toString());
+						}
+					}
+					this.callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, obj));
+				} catch (JSONException e){
+					this.callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.JSON_EXCEPTION));
+					Log.d("WebIntent", "JSONException: onActivityResult()");
 				}
-				//String contents = intent.getStringExtra("SCAN_RESULT");
-				//String format = intent.getStringExtra("SCAN_RESULT_FORMAT");
-				callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, r));
-			} else {
-				callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.ERROR));
+			} else if (resultCode == Activity.RESULT_CANCELED) {
+				this.callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.INVALID_ACTION));
 			}
 		}
     }
@@ -62,36 +69,7 @@ public class WebIntent extends CordovaPlugin {
         try {
             this.callbackContext = callbackContext;
 
-            if (action.equals("startActivityForResult")) {
-                if (args.length() != 1) {
-                    callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.INVALID_ACTION));
-                    return false;
-                }
-
-                // Parse the arguments
-                JSONObject obj = args.getJSONObject(0);
-                String type = obj.has("type") ? obj.getString("type") : null;
-                Uri uri = obj.has("url") ? Uri.parse(obj.getString("url")) : null;
-                JSONObject extras = obj.has("extras") ? obj.getJSONObject("extras") : null;
-                Map<String, String> extrasMap = new HashMap<String, String>();
-
-                // Populate the extras if any exist
-                if (extras != null) {
-                    JSONArray extraNames = extras.names();
-                    for (int i = 0; i < extraNames.length(); i++) {
-                        String key = extraNames.getString(i);
-                        String value = extras.getString(key);
-                        extrasMap.put(key, value);
-                    }
-                }
-				callbackExtras = extrasMap;
-
-				((CordovaActivity)this.cordova.getActivity()).setActivityResultCallback(this);
-                ((CordovaActivity)this.cordova.getActivity()).startActivityForResult(new Intent(obj.getString("action")), 0);
-                //return new PluginResult(PluginResult.Status.OK);                
-                return true;
-
-            } else if (action.equals("startActivity")) {
+			if (action.startsWith("startActivity")) {
                 if (args.length() != 1) {
                     //return new PluginResult(PluginResult.Status.INVALID_ACTION);
                     callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.INVALID_ACTION));
@@ -116,9 +94,13 @@ public class WebIntent extends CordovaPlugin {
                     }
                 }
 
-                startActivity(obj.getString("action"), uri, type, extrasMap);
-                //return new PluginResult(PluginResult.Status.OK);
-                callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK));
+				if (action.equals("startActivityForResult")) {
+					startActivity(obj.getString("action"), uri, type, extrasMap, true);
+				} else {  // Assume action.equals("startActivity")
+	                startActivity(obj.getString("action"), uri, type, extrasMap, false);
+	                //return new PluginResult(PluginResult.Status.OK);
+	                callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK));
+				}
                 return true;
 
             } else if (action.equals("hasExtra")) {
@@ -223,7 +205,7 @@ public class WebIntent extends CordovaPlugin {
         }
     }
 
-    void startActivity(String action, Uri uri, String type, Map<String, String> extras) {
+    void startActivity(String action, Uri uri, String type, Map<String, String> extras, boolean resultFlag) {
         Intent i = (uri != null ? new Intent(action, uri) : new Intent(action));
         
         if (type != null && uri != null) {
@@ -251,7 +233,11 @@ public class WebIntent extends CordovaPlugin {
                 i.putExtra(key, value);
             }
         }
-        ((CordovaActivity)this.cordova.getActivity()).startActivity(i);
+		if (resultFlag) {
+			((CordovaActivity)this.cordova.getActivity()).startActivityForResult((CordovaPlugin) this, i, REQUEST_CODE);
+		} else {
+	        ((CordovaActivity)this.cordova.getActivity()).startActivity(i);
+		}
     }
 
     void sendBroadcast(String action, Map<String, String> extras) {

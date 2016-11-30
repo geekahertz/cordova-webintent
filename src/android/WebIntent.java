@@ -234,7 +234,8 @@ public class WebIntent extends CordovaPlugin {
             }
         }
 		if (resultFlag) {
-			((CordovaActivity)this.cordova.getActivity()).startActivityForResult((CordovaPlugin) this, i, REQUEST_CODE);
+			this.cordova.setActivityResultCallback(this);
+			((CordovaActivity)this.cordova.getActivity()).startActivityForResult(i, REQUEST_CODE);
 		} else {
 	        ((CordovaActivity)this.cordova.getActivity()).startActivity(i);
 		}

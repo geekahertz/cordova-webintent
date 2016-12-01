@@ -34,8 +34,9 @@ Here is another example of using webintent to scan a barcode and return the barc
         {
             action: "com.google.zxing.client.android.SCAN"
         },
-        function() {data},
+        function(data) {
             alert(JSON.stringify(data));
+        },
         function() {
             alert('Failed to retrieve uri via Android Intent.');
         }

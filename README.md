@@ -21,8 +21,9 @@ Here is an example of using webintent to select a file chooser, pick a file, whi
             action: "android.intent.action.GET_CONTENT",
             type : "*/*"        
         },
-        function() {data},
+        function(data) {
             alert(JSON.stringify(data));
+        },
         function() {
             alert('Failed to retrieve uri via Android Intent.');
         }
